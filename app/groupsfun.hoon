@@ -10,6 +10,7 @@
 +$  card  card:agent:gall
 --
 %-  agent:dbug
+=/  current-goals  `(list [@p @t])`~
 =|  state-0
 =*  state  -
 ^-  agent:gall
@@ -26,14 +27,21 @@
 ++  on-save   on-save:default
 ++  on-load   on-load:default
 ++  on-poke   on-poke:default
+:: This arm triggered by Behn. Note that we should be checking the wire, since maybe one day
+:: we will wait for other stuff here
 ++  on-arvo
   |=  [=wire =sign-arvo]
   ^-  (quip card _this)
-  ~&  "Behn got back to us..."
+  ~&  "Behn got back to us...checking current goals"
+  ~&  current-goals
+  =/  goal  (snag 0 current-goals)
+  =/  stated-goal-index  (find [" "] (trip +.goal))
+  ?~  stated-goal-index  `this(current-goals (slag 1 current-goals))
+  =/  stated-goal  (slag (need stated-goal-index) (trip +.goal))
   =/  nest  [kind=%chat ship=~motluc-nammex name=%goals-bot]
-  :_  this
+  :_  this(current-goals (slag 1 current-goals))
   =/  memo  :*
-    ~[[%inline ~[ship+~motluc-nammex (crip "did you finish???")]]]
+    ~[[%inline ~[ship+-.goal (crip "Report on your goal: {stated-goal}")]]]
     author=our.bowl
     sent=now.bowl
   ==
@@ -75,9 +83,9 @@
               ~&  author
               ~&  nest
               ~&  content
-              :_  this()
+              :_  this(current-goals `(list [@p @t])`[[author content] current-goals])
               =/  memo  :*
-                ~[[%inline ~[ship+author (crip "{(scow %p author)}: Will add your goal.")]]]
+                ~[[%inline ~[(crip "Added {(scow %p author)}'s goal. Will check in 1 hour.")]]]
                 author=our.bowl
                 sent=now.bowl
               ==
@@ -86,7 +94,7 @@
               =/  post-action  [%add essay]
               =/  action  [%post post-action]
               :~  [%pass /some/ilovelove %agent [our.bowl %channels] %poke %channel-action !>([%channel nest action])]
-                  [%pass /timers %arvo %b %wait (add now.bowl ~s5)]
+                  [%pass /timers %arvo %b %wait (add now.bowl ~h1)]
               ==
             ~&  post  `this
           ~&  "Received something other than %set"  `this
